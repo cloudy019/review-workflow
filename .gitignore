@@ -21,8 +21,9 @@
 /docs/*
 !/docs/*.md
 
-# ---- artifacts：只放行两个评审工具目录 ----
+# ---- artifacts：只放行两个评审工具目录与索引 ----
 /artifacts/*
+!/artifacts/README.md
 !/artifacts/review_ui/
 !/artifacts/figure_repair/
 

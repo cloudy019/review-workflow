@@ -1,6 +1,8 @@
 # 人在回路论文评审流程
 
-单篇论文阅读 → 八节评审 → 人工判断 → 跨论文复用。本仓库只包含**流程代码、模板、测试与运行约定**，不含文献数据、成品文稿或个人课题资料。
+单篇论文阅读 → 八节评审 → 人工判断 → 跨论文复用。
+
+本仓库是**公开代码仓**：只含流程代码、模板、测试与运行约定，不含文献数据、成品文稿或个人课题资料。本地还有若干**不入库的私有工作区**，各有自己的 README，见下方索引。
 
 ## 快速开始
 
@@ -24,28 +26,51 @@ bash .workbuddy/serve_reviews.sh 8765 <token>
 
 评审服务读操作无需认证；写操作由核心状态机处理。
 
+## 文件夹索引
+
+**agent 进入任何目录前，先读该目录的 README。** 下表是唯一入口。
+
+### 仓库内容（入库）
+
+| 目录 | 是什么 | 先读 |
+|---|---|---|
+| `docs/` | 精简上下文四片：契约、决策、风险、待复核 | `docs/README.md` |
+| `evidence-loop/` | 运行内核：状态机、离线评审页、本机服务、模板与 prompts | `evidence-loop/README.md` |
+| `review_workflow/` | 兼容壳（4 个模块）+ 项目适配：队列、筛选、写作审计、Zotero 桥 | `review_workflow/README.md` |
+| `tests/` | 回归测试（当前基线 108 passed） | `tests/README.md` |
+| `artifacts/` | 过程产物与验证工具；仅 `review_ui/`、`figure_repair/` 的代码入库 | `artifacts/README.md` |
+
+### 本地私有工作区（不入库，仅本机 agent 参考）
+
+| 目录 | 是什么 | 先读 |
+|---|---|---|
+| `文献知识库/` | 证据、阅读、写作主库：候选、原文、评审任务、论点包、正文 | `文献知识库/README.md` |
+| `汇报PPT/` | 汇报材料与可复用资产 | `汇报PPT/00_资产索引/README.md` |
+| `文献精读/` | 已完成的精读材料（按批次归档，只读） | `文献精读/README.md` |
+| `文献自动下载/` | 自动抓取的候选 PDF 缓存（下载 ≠ 精读） | `文献自动下载/README.md` |
+| `archive/` | 归档区：按日期分批，`manifest.json` 可回溯 | `archive/README.md` |
+| `tmp/` | 临时区：可随时清空 | `tmp/README.md` |
+
+### 根文件
+
+| 文件 | 作用 |
+|---|---|
+| `README.md` | 本页，唯一总入口 |
+| `AGENTS.md` | 项目长期约定（本地，不入库） |
+| `启动人工评审.cmd` / `一键更新评审.cmd` | 两个双击入口 |
+| `AI论文人工评审.exe` | 评审程序本体（由 cmd 调用） |
+| `.gitignore` | 白名单规则 |
+
 ## 文档
 
 | 文件 | 内容 |
 |---|---|
-| `docs/CONTRACTS.md` | **唯一契约汇总**：任务与批次边界、状态协议、八节与许可、哈希锚点、图表裁切硬约束、目录、验证判据、白名单 |
+| `docs/CONTRACTS.md` | **唯一契约汇总**：批次边界、状态协议、八节与许可、哈希锚点、图表裁切、目录、命令、验证判据、白名单 |
 | `docs/DECISIONS.md` | 9 条关键决策，每条含「决策 / 理由 / 否决方案」 |
 | `docs/RISKS.md` | 未闭合风险与待办 |
 | `docs/OPEN.md` | 待复核事项与已处理的事实冲突 |
 | `evidence-loop/docs/protocol.md` | 框架级请求/结果协议原文（契约，勿改语义） |
 | `evidence-loop/docs/ai-review.md` | AI 核验报告字段与 `ai_verified` 分支 |
-
-## 目录
-
-| 路径 | 作用 |
-|---|---|
-| `evidence-loop/` | 统一运行核心：状态机、离线评审页渲染、本机评审服务、模板与 prompts |
-| `review_workflow/` | 兼容壳（4 个模块 `import *`）+ 项目适配：队列、筛选、写作审计、Zotero 桥 |
-| `tests/` | 队列、协议、渲染、门禁、锁的回归测试 |
-| `artifacts/review_ui/` | 页面验证栈：`build_preview.py → verify.py → dom_test.js → probe.py → shoot.py` |
-| `artifacts/figure_repair/` | 图表提取、身份核验与批量裁切 |
-| `docs/` | 契约、决策、风险、待复核四片精简上下文 |
-| `.workbuddy/serve_reviews.sh` | 本机评审服务启动（固定 token） |
 
 ## 源码来源
 
