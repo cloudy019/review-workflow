@@ -560,7 +560,6 @@
       <div class="reader-h">
         <div class="tabs" role="tablist" aria-label="阅读材料分区">
           <button role="tab" type="button" data-pane="note" aria-selected="true">速读</button>
-          <button role="tab" type="button" data-pane="claims" aria-selected="false">主张 <em id="c-claims">0</em></button>
         </div>
         <div class="docnav" id="docnav" role="group" aria-label="速读筛选">
           <button type="button" data-summary-filter="all" class="on">全部</button>
@@ -576,7 +575,6 @@
         <section class="pane" id="pane-note" role="tabpanel" aria-label="论文速读">
           <div class="note" id="paper-reader">__READER_CONTENT_HTML__</div>
         </section>
-        <section class="pane" id="pane-claims" role="tabpanel" aria-label="候选主张" hidden>__CLAIMS_HTML__</section>
       </div>
     </main>
 
@@ -686,7 +684,6 @@
   $("#paper-meta").title = paper.human_review_dir ? "保存位置：" + paper.human_review_dir : "";
 
   /* ---------- 计数 ---------- */
-  $("#c-claims").textContent = String(claims.length);
   $$(".tabs button").forEach(btn => {
     const badge = $("em", btn);
     if (badge && badge.textContent.trim() === "0") btn.hidden = true;

@@ -1415,10 +1415,17 @@ def render_review_html(record: Mapping[str, Any]) -> str:
         raise RuntimeError(f"offline KaTeX runtime not found: {_KATEX_JS_PATH}") from exc
     katex_js = re.sub(r"</script", r"<\\/script", katex_js, flags=re.IGNORECASE)
     note_html, claims_html = _render_reader(record)
+    if claims_html.strip():
+        note_html = (
+            note_html
+            + '\n<section class="summary-section" data-summary-topic="claims">'
+            + "<h2>候选主张</h2>"
+            + claims_html
+            + "</section>"
+        )
     replacements = {
         "__PAPER_RECORD_JSON__": _json_for_html(normalized),
         _READER_MARKER: note_html,
-        "__CLAIMS_HTML__": claims_html,
         "__KATEX_RUNTIME_JS__": katex_js,
     }
     for marker in replacements:
