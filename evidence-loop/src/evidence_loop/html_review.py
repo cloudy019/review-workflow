@@ -781,6 +781,7 @@ def _figure_cards(record: Mapping[str, Any]) -> list[dict[str, Any]]:
                 "description": f"{caption} {figure['reason']} {pdf_caption}".strip(),
                 "included": figure["decision"] != "omit",
                 "html": _figure_card(figure, caption),
+                "src": figure["src"],
             }
         )
     return cards
@@ -1082,51 +1083,105 @@ def _figure_gap_notice(record: Mapping[str, Any], card_count: int) -> str:
 
 
 
-def _render_claims(record: Mapping[str, Any]) -> str:
+def _render_claims(
+    record: Mapping[str, Any], figures: list[dict[str, Any]] | None = None
+) -> str:
+    """Claims ordered by source page, each carrying the figures on those pages.
+
+    A claim list without evidence is just prose: the reader cannot see what the
+    claim rests on, and every sentence ends up hedged.  Each claim therefore
+    shows the verified crops from its own ``source_pages`` (up to two) and one
+    explicit AI verdict, while the claim text stays exactly as recorded.
+    """
+
     claims = record.get("claims") or []
     if not claims:
         return '<p class="reader-empty">这篇论文还没有抽取候选主张。</p>'
+
+    by_page: dict[int, list[dict[str, Any]]] = {}
+    for figure in figures or []:
+        if not figure.get("included") or not figure.get("src"):
+            continue
+        try:
+            page = int(figure["page"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        by_page.setdefault(page, []).append(figure)
+
     kind_styles = {
         "source_statement": ("原文陈述", "src"),
         "ai_inference": ("AI 推断", "inf"),
         "ai_verified": ("AI 核验主张", "inf"),
     }
-    cards = []
-    for claim in claims:
-        if not isinstance(claim, Mapping):
-            continue
+    verdicts = {
+        "source_statement": "作者在该页的陈述，可直接作为这一篇的观点引用；跨篇推论需另找证据。",
+        "ai_inference": "AI 从原文归纳的推断，不是作者原话；引用前回到所标页码核对。",
+        "ai_verified": "已通过来源绑定的 AI 核验，可进入正文，但限定条件随条保留。",
+    }
+
+    def first_page(claim: Mapping[str, Any]) -> int:
+        pages = [int(p) for p in (claim.get("source_pages") or []) if str(p).isdigit()]
+        return min(pages) if pages else 999
+
+    ordered = sorted(
+        [claim for claim in claims if isinstance(claim, Mapping)], key=first_page
+    )
+    cards: list[str] = []
+    with_figures = 0
+    for claim in ordered:
         kind = str(claim.get("kind") or "source_statement")
         label, tone = kind_styles.get(kind, ("原文陈述", "src"))
-        pages = [
-            str(page) for page in (claim.get("source_pages") or []) if str(page).isdigit()
-        ]
+        pages = [int(p) for p in (claim.get("source_pages") or []) if str(p).isdigit()]
         chips = (
             '<span class="claim-pg">原文 ' + "、".join(f"p.{page}" for page in pages) + "</span>"
             if pages
             else ""
         )
+
+        picked: list[dict[str, Any]] = []
+        for page in pages:
+            for figure in by_page.get(page, []):
+                if figure not in picked:
+                    picked.append(figure)
+            if len(picked) >= 2:
+                break
+        if picked:
+            with_figures += 1
+        fig_html = "".join(
+            '<button type="button" class="claim-fig"'
+            f' data-label="{html.escape(str(figure["label"]), quote=True)}"'
+            f' data-page="{figure["page"]}">'
+            f'<img src="{figure["src"]}" alt="{html.escape(str(figure["label"]), quote=True)}" loading="lazy">'
+            f'<span>{html.escape(str(figure["label"]))} · p.{figure["page"]}</span>'
+            "</button>"
+            for figure in picked
+        )
+
         claim_id = str(claim.get("claim_id") or "")
         checkbox_id = "claim-" + re.sub(r"[^A-Za-z0-9_-]", "", claim_id)
         cards.append(
             '<div class="claim">'
             f'<input type="checkbox" id="{html.escape(checkbox_id, quote=True)}" value="{html.escape(claim_id, quote=True)}">'
-            "<div>"
+            '<div class="claim-main">'
             '<div class="claim-h">'
             f'<label for="{html.escape(checkbox_id, quote=True)}"><span class="claim-id">{html.escape(claim_id)}</span></label>'
             f'<span class="badge {tone}">{label}</span>'
+            f"{chips}"
             "</div>"
             f'<label class="claim-x" for="{html.escape(checkbox_id, quote=True)}">{html.escape(str(claim.get("text") or ""))}</label>'
-            f'<div class="claim-f">{chips}'
-            + ("<p>来源：" + html.escape("；".join(claim["source_anchors"])) + "</p>" if claim.get("source_anchors") else "")
-            + ("<p>适用范围：" + html.escape(claim["limitations"]) + "</p>" if claim.get("limitations") else "")
+            f'<p class="claim-judge"><b>AI 判断</b>：{html.escape(verdicts.get(kind, verdicts["source_statement"]))}</p>'
+            + ("<p class=\"claim-lim\">适用边界：" + html.escape(str(claim["limitations"])) + "</p>" if claim.get("limitations") else "")
             + "</div>"
-            "</div></div>"
+            + (f'<div class="claim-figs">{fig_html}</div>' if fig_html else "")
+            + "</div>"
         )
-    return (
-        '<p class="claims-note">勾选你已核验、并允许写入综述的主张；勾选结果会自动填进第 8 节的'
-        "「已批准的具体主张」。未勾选的主张只作为线索，不会被引用。</p>"
-        f'<div class="claims">{"".join(cards)}</div>'
+
+    summary = (
+        f'<p class="claims-note">共 {len(ordered)} 条主张，按原文页码排序；'
+        f"其中 {with_figures} 条已挂上对应页的图。勾选表示你已核验并允许写入综述，"
+        "未勾选的只作为线索。</p>"
     )
+    return summary + f'<div class="claims">{"".join(cards)}</div>'
 
 
 def _render_reader(record: Mapping[str, Any]) -> tuple[str, str]:
@@ -1139,14 +1194,15 @@ def _render_reader(record: Mapping[str, Any]) -> tuple[str, str]:
     if rendered_html is not None and not isinstance(rendered_html, str):
         raise ReviewRecordError("reader_html must be a string")
     base_dir = _reader_base_dir(record)
+    figure_cards = _figure_cards(record)
     if isinstance(markdown, str) and markdown.strip():
         note, _page_block, claims_block = _split_reader(markdown)
-        claims_html = _render_claims(record)
+        claims_html = _render_claims(record, figure_cards)
         if claims_html.startswith('<p class="reader-empty"'):
             legacy_claims = _render_legacy_claims(claims_block, base_dir)
             if legacy_claims:
                 claims_html = legacy_claims
-        cards = _figure_cards(record)
+        cards = figure_cards
         note_html, leftover = _inline_figures(
             _markdown_to_safe_html(note, base_dir, summary_mode=True),
             [card for card in cards if card["included"]],
@@ -1161,11 +1217,11 @@ def _render_reader(record: Mapping[str, Any]) -> tuple[str, str]:
     if isinstance(rendered_html, str) and rendered_html.strip():
         return (
             _sanitize_reader_html(rendered_html, base_dir),
-            _render_claims(record),
+            _render_claims(record, figure_cards),
         )
     return (
         '<p class="reader-empty">尚未嵌入全文阅读材料。</p>',
-        _render_claims(record),
+        _render_claims(record, figure_cards),
     )
 
 

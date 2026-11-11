@@ -289,21 +289,36 @@
   .badge.src{background:var(--brand-soft);color:var(--brand-ink)}
   .badge.inf{background:var(--warn-soft);color:var(--warn)}
 
-  /* 主张卡 */
+  /* 主张卡：文字 + 该页的图 + AI 判断 */
   .claims{display:flex;flex-direction:column;gap:12px}
   .claim{
-    display:grid;grid-template-columns:26px 1fr;gap:12px;padding:14px 16px;
+    display:grid;grid-template-columns:26px minmax(0,1fr) 196px;gap:14px;padding:14px 16px;
     border:1px solid var(--line);border-radius:12px;background:var(--surface-2);
   }
   .claim:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
+  .claim:not(:has(.claim-figs)){grid-template-columns:26px minmax(0,1fr)}
   .claim input[type="checkbox"]{width:17px;height:17px;margin:3px 0 0;accent-color:var(--brand);cursor:pointer}
   .claim-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
   .claim-id{font-family:var(--mono);font-size:11.5px;font-weight:700;color:var(--brand-ink);background:var(--surface);padding:1px 6px;border-radius:5px;border:1px solid var(--line)}
   .claim-x{display:block;font-size:13.5px;line-height:1.68;color:var(--ink);cursor:pointer}
   .claim-f{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .claim-pg{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .claim-judge{margin:8px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}
+  .claim-judge b{color:var(--brand-ink);font-weight:600}
+  .claim-lim{margin:4px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}
+  .claim-figs{display:flex;flex-direction:column;gap:8px}
+  .claim-fig{padding:0;border:1px solid var(--line);border-radius:9px;background:#fff;overflow:hidden;cursor:zoom-in;text-align:left}
+  .claim-fig:hover{border-color:var(--line-strong)}
+  .claim-fig img{display:block;width:100%;height:104px;object-fit:contain;background:#fff}
+  .claim-fig span{display:block;padding:4px 7px;border-top:1px solid var(--line);font-size:10.5px;color:var(--muted);font-family:var(--sans)}
   .claims-note{
     margin:0 0 16px;padding:11px 14px;border-radius:10px;background:var(--surface-2);
     border:1px solid var(--line);font-size:12.5px;color:var(--muted);line-height:1.6;
+  }
+  @media (max-width:1180px){
+    .claim{grid-template-columns:26px minmax(0,1fr)}
+    .claim-figs{grid-column:2;flex-direction:row;flex-wrap:wrap}
+    .claim-fig{width:150px}
   }
 
   /* ---------- 右：评审卡 ---------- */
@@ -960,11 +975,12 @@
     lbImg.removeAttribute("src");
     document.body.classList.remove("lb-open");
   }
-  $("#reader-body").addEventListener("click", event => {
+  document.addEventListener("click", event => {
     const img = event.target.closest("img");
     if (!img) return;
+    if (!img.closest(".fig, .claim-fig, .reader-figure, .page")) return;
     const page = img.closest(".page");
-    const fig = img.closest(".fig");
+    const fig = img.closest(".fig, .claim-fig");
     let caption = img.alt || "";
     if (page) caption = "原文第 " + (page.dataset.page || "") + " 页";
     if (fig && fig.dataset.label) caption = fig.dataset.label + (fig.dataset.page ? " · 原文第 " + fig.dataset.page + " 页" : "");
