@@ -1,0 +1,403 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>单篇论文人工评审</title>
+  <style>
+    :root { color-scheme: light; --ink:#17202a; --muted:#65717f; --line:#d9e0e7; --paper:#fff; --bg:#f3f5f7; --brand:#216869; --warn:#9c5a00; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 system-ui,"Microsoft YaHei",sans-serif; }
+    header, main, footer { width:min(1560px,calc(100% - 32px)); margin:auto; }
+    header { padding:40px 0 20px; }
+    .title-row { display:flex; align-items:flex-start; gap:12px; }
+    .title-row h1 { flex:1; }
+    .copy-title { flex:0 0 auto; margin-top:3px; color:var(--ink); background:#e8edf0; }
+    h1 { margin:0 0 8px; font-size:clamp(24px,4vw,38px); }
+    .meta,.muted { color:var(--muted); }
+    .notice,.section { background:var(--paper); border:1px solid var(--line); border-radius:12px; }
+    .notice { padding:14px 18px; margin:0 0 18px; }
+    .workspace { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(390px,.8fr); align-items:start; gap:20px; }
+    .reader-panel { position:sticky; top:10px; max-height:calc(100vh - 20px); overflow:auto; padding:22px; background:var(--paper); border:1px solid var(--line); border-radius:12px; }
+    .reader-panel h1 { font-size:28px; }
+    .reader-panel h2 { margin-top:2em; padding-bottom:6px; border-bottom:1px solid var(--line); font-size:23px; }
+    .reader-panel h3 { margin-top:1.5em; font-size:19px; }
+    .reader-panel p { margin:.8em 0; }
+    .reader-panel img { display:block; max-width:100%; height:auto; margin:auto; border-radius:6px; cursor:zoom-in; }
+    .reader-panel figure { margin:18px 0; }
+    .reader-panel pre { overflow:auto; padding:12px; background:#f5f7f8; border-radius:7px; white-space:pre-wrap; }
+    .reader-panel blockquote { margin:12px 0; padding:2px 14px; color:#4b5965; border-left:4px solid #9ab8b8; }
+    .reader-panel table { width:100%; border-collapse:collapse; font-size:14px; }
+    .reader-panel th,.reader-panel td { padding:7px 9px; border:1px solid var(--line); text-align:left; vertical-align:top; }
+    .reader-table-wrap { overflow:auto; }
+    .summary-intro { display:flex; align-items:baseline; gap:10px; margin:0 0 12px; padding:13px 15px; background:#eef5f7; border-radius:9px; }
+    .summary-intro strong { color:var(--brand); font-size:20px; }
+    .summary-intro span { color:var(--muted); font-size:14px; }
+    .summary-nav { position:sticky; z-index:4; top:-22px; display:flex; flex-wrap:wrap; gap:7px; margin:0 -6px 18px; padding:10px 6px; background:rgba(255,255,255,.96); border-bottom:1px solid var(--line); }
+    .summary-nav button { padding:7px 12px; color:var(--ink); background:#edf1f3; font-size:14px; }
+    .summary-nav button.active { color:white; background:var(--brand); }
+    .summary-section { margin:0 0 16px; padding:1px 17px 14px; background:#fff; border:1px solid var(--line); border-radius:10px; }
+    .summary-section[hidden] { display:none; }
+    .summary-section h2 { margin-top:1em; }
+    .summary-section h3 { color:#294d54; }
+    .reader-math { font-family:Cambria Math,"Times New Roman",serif; }
+    .reader-math-block { display:block; margin:16px 0; padding:10px; overflow-x:auto; text-align:center; background:#fafbfc; border-radius:7px; }
+    .reader-math-error { color:var(--warn); }
+    .key-english { margin:14px 0 4px; padding:13px 16px; background:#fff; border-left:4px solid #507a8a; }
+    .key-english p { margin:.35em 0; font-family:Georgia,"Times New Roman",serif; font-size:17px; line-height:1.72; }
+    .source-label { color:#507a8a; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+    .ai-annotation { margin:0 0 18px; padding:11px 16px; color:#42545a; background:#f3f8f7; border-left:4px solid var(--brand); border-radius:0 7px 7px 0; }
+    .ai-annotation p { margin:.35em 0; }
+    .annotation-label { color:var(--brand); font-size:13px; font-weight:700; }
+    .image-lightbox[hidden] { display:none; }
+    .image-lightbox { position:fixed; z-index:9999; inset:0; display:flex; align-items:center; justify-content:center; padding:36px; background:rgba(8,15,20,.92); }
+    .image-lightbox img { max-width:94vw; max-height:90vh; object-fit:contain; cursor:zoom-out; }
+    .image-lightbox button { position:absolute; top:14px; right:18px; width:44px; height:44px; padding:0; border-radius:50%; font-size:28px; background:rgba(255,255,255,.18); }
+    body.lightbox-open { overflow:hidden; }
+    .reader-image-missing,.reader-empty { color:var(--warn); }
+    .review-panel { min-width:0; }
+    .section { padding:22px; margin:0 0 18px; }
+    .section h2 { margin:0; font-size:20px; }
+    .critical { display:inline-block; margin-left:8px; color:var(--warn); font-size:13px; }
+    .ai { margin:14px 0; padding:14px 16px; white-space:pre-wrap; background:#f7faf9; border-left:4px solid var(--brand); }
+    .anchors { margin:-4px 0 14px; white-space:pre-wrap; }
+    fieldset { border:0; padding:0; margin:14px 0; }
+    legend { font-weight:650; margin-bottom:8px; }
+    label.option { display:inline-flex; align-items:center; gap:6px; margin:3px 18px 3px 0; }
+    textarea { width:100%; min-height:100px; padding:10px; border:1px solid var(--line); border-radius:8px; font:inherit; resize:vertical; }
+    .permission { padding:14px; background:#fff8eb; border-radius:8px; }
+    .permission input:disabled + span { color:var(--muted); }
+    .actions { position:sticky; bottom:0; display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:14px; background:rgba(255,255,255,.96); border:1px solid var(--line); border-radius:12px 12px 0 0; box-shadow:0 -6px 22px rgba(0,0,0,.06); }
+    button { border:0; border-radius:8px; padding:10px 16px; color:white; background:var(--brand); cursor:pointer; font:inherit; }
+    button.secondary { color:var(--ink); background:#e8edf0; }
+    #status { flex:1; min-width:220px; color:var(--muted); }
+    .save-target { margin:10px 0 0; color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+    footer { padding:18px 0 40px; }
+    @media (max-width:1000px) { .workspace { grid-template-columns:1fr; } .reader-panel { position:relative; top:0; max-height:none; } }
+    @media (max-width:600px) { .section,.reader-panel { padding:16px; } label.option { display:flex; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-row"><h1 id="paper-title"></h1><button type="button" class="copy-title" id="copy-title">复制论文标题</button></div>
+    <div class="meta" id="paper-meta"></div>
+  </header>
+  <main>
+    <div class="notice">左侧是AI论文速读器：提炼问题、方法、结果、局限和综述价值，不代替PDF原文；需要核验上下文时，复制标题后到Zotero打开原文。右侧只要求你判断论文价值；不想判断的部分可以跳过。<div class="save-target" id="save-target"></div></div>
+    <div class="workspace">
+      <article class="reader-panel" id="paper-reader" aria-label="论文全文阅读材料">__READER_CONTENT_HTML__</article>
+      <div class="review-panel"><form id="review-form" novalidate></form></div>
+    </div>
+    <div class="actions">
+      <span id="status" role="status" aria-live="polite"></span>
+      <button type="button" class="secondary" id="save">保存草稿</button>
+      <button type="button" class="secondary" id="clear">清除草稿</button>
+      <button type="button" class="secondary" id="download">下载备用JSON</button>
+      <button type="button" id="export">保存评审</button>
+    </div>
+  </main>
+  <footer class="muted">页面只连接本机评审服务，不上传论文或笔记。</footer>
+
+  <div class="image-lightbox" id="image-lightbox" role="dialog" aria-modal="true" aria-label="放大查看论文图片" hidden>
+    <button type="button" id="image-lightbox-close" aria-label="关闭大图">×</button>
+    <img id="image-lightbox-image" alt="">
+  </div>
+
+  <script type="application/json" id="paper-data">__PAPER_RECORD_JSON__</script>
+  <script>__KATEX_RUNTIME_JS__</script>
+  <script>
+  (() => {
+    "use strict";
+    const paper = JSON.parse(document.getElementById("paper-data").textContent);
+    const verdicts = [
+      ["correct", "正确"], ["partially_correct", "部分正确"],
+      ["incorrect", "错误"], ["unable_to_judge", "无法判断"],
+      ["skipped", "跳过（不评审本节）"]
+    ];
+    const storageKey = ["paper-human-review", paper.schema_version, paper.paper_id, paper.pdf_sha256, paper.ai_note_sha256].join(":");
+    const reviewFileName = `${paper.zotero_key}.human-review.json`;
+    const form = document.getElementById("review-form");
+    const statusEl = document.getElementById("status");
+
+    const esc = (value) => String(value).replace(/[&<>\"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+    document.title = `${paper.title}｜人工评审`;
+    document.getElementById("paper-title").textContent = paper.title;
+    document.getElementById("paper-meta").textContent = [paper.citation, `Zotero Key: ${paper.zotero_key}`].filter(Boolean).join(" · ");
+    document.getElementById("save-target").textContent = paper.human_review_dir
+      ? `建议保存位置：${paper.human_review_dir}`
+      : "评审记录保存在本篇论文的 human_reviews 文件夹。";
+
+    function downloadReview(text) {
+      const blob = new Blob([text], {type:"application/json;charset=utf-8"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = reviewFileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(link.href), 0);
+    }
+
+    function localReviewEndpoint() {
+      const token = new URLSearchParams(location.search).get("token");
+      const local = location.protocol === "http:" && location.hostname === "127.0.0.1";
+      return local && token
+        ? `/api/reviews/${encodeURIComponent(paper.job_id)}?token=${encodeURIComponent(token)}`
+        : null;
+    }
+
+    document.getElementById("copy-title").addEventListener("click", async () => {
+      const button = document.getElementById("copy-title");
+      const fallbackCopy = () => {
+        const helper = document.createElement("textarea");
+        helper.value = paper.title;
+        helper.style.position = "fixed";
+        helper.style.opacity = "0";
+        document.body.appendChild(helper);
+        helper.select();
+        const copied = document.execCommand("copy");
+        helper.remove();
+        if (!copied) throw new Error("copy failed");
+      };
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          try { await navigator.clipboard.writeText(paper.title); }
+          catch (_) { fallbackCopy(); }
+        } else {
+          fallbackCopy();
+        }
+        button.textContent = "已复制";
+      } catch (_) {
+        button.textContent = "复制失败，请手动选择标题";
+      }
+      setTimeout(() => { button.textContent = "复制论文标题"; }, 1800);
+    });
+
+    document.querySelectorAll(".reader-math").forEach(element => {
+      const tex = element.textContent.trim();
+      try {
+        katex.render(tex, element, {
+          displayMode: element.dataset.display === "true",
+          output: "mathml",
+          throwOnError: true,
+          strict: false,
+          trust: false
+        });
+      } catch (_) {
+        element.textContent = tex;
+        element.classList.add("reader-math-error");
+        element.title = "该公式未能自动渲染，请按原始 LaTeX 阅读";
+      }
+    });
+
+    document.querySelectorAll("[data-summary-filter]").forEach(button => {
+      button.addEventListener("click", () => {
+        const selected = button.dataset.summaryFilter;
+        document.querySelectorAll("[data-summary-filter]").forEach(item => item.classList.toggle("active", item === button));
+        document.querySelectorAll(".summary-section").forEach(section => {
+          section.hidden = selected !== "all" && section.dataset.summaryTopic !== selected;
+        });
+        document.getElementById("paper-reader").scrollTo({top:0, behavior:"smooth"});
+      });
+    });
+
+    const lightbox = document.getElementById("image-lightbox");
+    const lightboxImage = document.getElementById("image-lightbox-image");
+    const closeLightbox = () => {
+      lightbox.hidden = true;
+      lightboxImage.removeAttribute("src");
+      lightboxImage.alt = "";
+      document.body.classList.remove("lightbox-open");
+    };
+    document.getElementById("paper-reader").addEventListener("click", event => {
+      const image = event.target.closest("img");
+      if (!image) return;
+      lightboxImage.src = image.src;
+      lightboxImage.alt = image.alt || "论文图片";
+      lightbox.hidden = false;
+      document.body.classList.add("lightbox-open");
+      document.getElementById("image-lightbox-close").focus();
+    });
+    document.getElementById("image-lightbox-close").addEventListener("click", closeLightbox);
+    lightbox.addEventListener("click", event => { if (event.target === lightbox || event.target === lightboxImage) closeLightbox(); });
+    document.addEventListener("keydown", event => { if (event.key === "Escape" && !lightbox.hidden) closeLightbox(); });
+
+    form.innerHTML = paper.sections.map(section => `
+      <section class="section" data-section="${esc(section.id)}" data-critical="${section.critical}">
+        <h2>${esc(section.title)}${section.critical ? '<span class="critical">关键确认项</span>' : ""}</h2>
+        <div class="ai">${esc(section.ai_content)}</div>
+        ${section.source_anchors ? `<div class="anchors muted">原文定位：${esc(section.source_anchors)}</div>` : ""}
+        <fieldset><legend>你认为AI的判断：</legend>
+          ${verdicts.map(([value,label]) => `<label class="option"><input type="radio" name="${esc(section.id)}-verdict" value="${value}"> ${label}</label>`).join("")}
+        </fieldset>
+        <fieldset><legend>分类选择（可多选）：</legend>
+          ${section.categories.map(category => `<label class="option"><input type="checkbox" name="${esc(section.id)}-category" value="${esc(category)}"> ${esc(category)}</label>`).join("")}
+        </fieldset>
+        <label><strong>你的心得、修正或补充</strong><textarea name="${esc(section.id)}-notes" placeholder="可留空；涉及判断依据时建议写明页码、图表或原文位置。"></textarea></label>
+        ${section.id === "synthesis_permission" ? `<div class="permission">
+          <strong>综合池状态</strong>
+          <div class="muted" id="permission-reason">系统会根据第1节的证据角色判断是否进入综合候选池；具体主张由AI整理，写章节前再由你选择。</div>
+        </div>` : ""}
+      </section>`).join("");
+
+    function collectSections() {
+      const result = [];
+      paper.sections.forEach((section, index) => {
+        const verdict = form.querySelector(`input[name="${section.id}-verdict"]:checked`);
+        if (verdict) result.push({
+          section_id: index + 1,
+          verdict: verdict.value,
+          notes: form.querySelector(`textarea[name="${section.id}-notes"]`).value.trim(),
+          answers: {categories: [...form.querySelectorAll(`input[name="${section.id}-category"]:checked`)].map(item => item.value)}
+        });
+      });
+      return result;
+    }
+
+    function reviewState() {
+      const sections = collectSections();
+      const answersByNumber = new Map(sections.map(item => [item.section_id, item]));
+      const unanswered = paper.sections.map((s, index) => index + 1).filter(number => !answersByNumber.has(number));
+      const criticalUnresolved = paper.sections.map((s, index) => ({...s, number:index + 1})).filter(s => s.critical && (!answersByNumber.has(s.number) || answersByNumber.get(s.number).verdict === "unable_to_judge")).map(s => s.id);
+      const allUnable = sections.some(item => item.verdict === "unable_to_judge");
+      const evidenceRoles = answersByNumber.get(1)?.answers.categories || [];
+      const excluded = evidenceRoles.includes("排除");
+      const paperHasValue = evidenceRoles.some(value => ["核心证据", "支持证据", "背景证据"].includes(value));
+      const reviewOutcome = excluded ? "excluded" : (unanswered.length === 0 && !allUnable ? "human_confirmed" : "needs_clarification");
+      return {
+        schema_version: paper.schema_version,
+        job_id: paper.job_id,
+        paper_id: paper.paper_id,
+        zotero_key: paper.zotero_key,
+        pdf_sha256: paper.pdf_sha256,
+        ai_note_sha256: paper.ai_note_sha256,
+        review_outcome: reviewOutcome,
+        sections,
+        citation_permission: {
+          allowed: paperHasValue && reviewOutcome === "human_confirmed",
+          approved_claims: [],
+          notes: "论文级综合许可；具体主张在章节论点包阶段由人工选择。"
+        },
+        exported_at: null,
+        _draft: { critical_unresolved: criticalUnresolved, unanswered}
+      };
+    }
+
+    function updatePermission() {
+      const state = reviewState();
+      const reason = document.getElementById("permission-reason");
+      const unresolved = state._draft.critical_unresolved;
+      if (unresolved.length) {
+        reason.textContent = `尚有 ${unresolved.length} 个关键项未完成；可以选择“跳过”，不必填写技术判断。`;
+      } else if (state.citation_permission.allowed) {
+        reason.textContent = "这篇论文将进入综合候选池；具体主张由AI提取，写章节前再让你选择。";
+      } else {
+        reason.textContent = "尚未选择核心、支持或背景证据角色，因此不会进入综合候选池。";
+      }
+    }
+
+    function saveDraft(showMessage = true) {
+      localStorage.setItem(storageKey, JSON.stringify(reviewState()));
+      if (showMessage) statusEl.textContent = `草稿已保存在本浏览器（${new Date().toLocaleTimeString()}）`;
+    }
+
+    function applyDraft(draft, message) {
+      for (const [index, section] of paper.sections.entries()) {
+        const answer = Array.isArray(draft.sections) ? draft.sections.find(item => item.section_id === index + 1) : null;
+        if (!answer) continue;
+        if (answer.verdict) {
+          const radio = form.querySelector(`input[name="${section.id}-verdict"][value="${answer.verdict}"]`);
+          if (radio) radio.checked = true;
+        }
+        for (const category of ((answer.answers && answer.answers.categories) || answer.categories || [])) {
+          const check = [...form.querySelectorAll(`input[name="${section.id}-category"]`)].find(item => item.value === category);
+          if (check) check.checked = true;
+        }
+        form.querySelector(`textarea[name="${section.id}-notes"]`).value = answer.notes || "";
+      }
+      statusEl.textContent = message;
+    }
+
+    async function restoreDraft() {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        try {
+          applyDraft(JSON.parse(raw), "已恢复本浏览器中的未提交草稿。");
+          return;
+        } catch (_) {
+          statusEl.textContent = "浏览器草稿无法解析，正在尝试恢复已保存评审。";
+        }
+      }
+      const endpoint = localReviewEndpoint();
+      if (!endpoint) return;
+      try {
+        const response = await fetch(endpoint);
+        if (response.status === 404) return;
+        const result = await response.json();
+        if (response.ok && result.ok && result.review) {
+          applyDraft(result.review, "已恢复上次保存的人工评审；可以继续补充或修改。");
+        }
+      } catch (_) {
+        statusEl.textContent = "未能恢复已保存评审；可以继续填写并重新保存。";
+      }
+    }
+
+    async function exportReview() {
+      const output = reviewState();
+      if (output.sections.length === 0) {
+        statusEl.textContent = "请至少完成一节判断后再导出部分评审记录。";
+        return;
+      }
+      output.exported_at = new Date().toISOString();
+      delete output._draft;
+      const text = JSON.stringify(output, null, 2);
+      const endpoint = localReviewEndpoint();
+      if (!endpoint) {
+        statusEl.textContent = "请从“启动人工评审”打开页面，才能自动保存到论文目录。";
+        return;
+      }
+      try {
+        const response = await fetch(endpoint, {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body:text
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error(result.message || "保存失败");
+        statusEl.textContent = output.review_outcome === "human_confirmed"
+          ? `已保存到本篇 human_reviews：${result.file_name}`
+          : `部分评审已保存到本篇 human_reviews：${result.file_name}`;
+      } catch (error) {
+        statusEl.textContent = `保存失败：${error.message || "请确认本机评审服务仍在运行"}`;
+        return;
+      }
+      saveDraft(false);
+    }
+
+    restoreDraft().then(updatePermission);
+    updatePermission();
+    form.addEventListener("change", () => { updatePermission(); saveDraft(false); });
+    form.addEventListener("input", () => saveDraft(false));
+    document.getElementById("save").addEventListener("click", () => saveDraft(true));
+    document.getElementById("download").addEventListener("click", () => {
+      const output = reviewState();
+      if (output.sections.length === 0) {
+        statusEl.textContent = "请至少完成一节判断后再下载备用记录。";
+        return;
+      }
+      output.exported_at = new Date().toISOString();
+      delete output._draft;
+      downloadReview(JSON.stringify(output, null, 2));
+      statusEl.textContent = "已下载备用JSON；正常使用请点击“保存评审”。";
+    });
+    document.getElementById("export").addEventListener("click", exportReview);
+    document.getElementById("clear").addEventListener("click", () => {
+      if (!confirm("只清除本页在当前浏览器中的草稿？")) return;
+      localStorage.removeItem(storageKey);
+      form.reset(); updatePermission(); statusEl.textContent = "草稿已清除。";
+    });
+    if (!localReviewEndpoint()) statusEl.textContent = "当前是旧的文件打开方式；请改用“启动人工评审”。";
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "name": "workbuddy",
+  "command": ["node", "/path/to/workbuddy/cli/bin/codebuddy", "--print", "--output-format", "json", "--tools", "", "--no-session-persistence", "--max-turns", "2", "--system-prompt", "You are a scientific reading assistant. Fill the exact JSON result contract from the supplied source. Do not use tools or delegate. Return only JSON."],
+  "timeout": 300
+}

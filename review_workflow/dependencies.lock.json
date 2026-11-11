@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "skills": {
+    "deeppapernote": {
+      "repository": "917Dhj/DeepPaperNote",
+      "commit": "9447365a2a05790ea23c4ba9a7f70c15bddb477c",
+      "path": "skills/deeppapernote",
+      "license": "MIT"
+    },
+    "research-hub-components": {
+      "repository": "WenyuChiou/research-hub",
+      "commit": "3143d2d62f798960731cae5a2b4f91aeaca25e75",
+      "paths": [
+        "skills/gap-to-topic",
+        "skills/research-context-compressor",
+        "skills/research-project-orienter",
+        "skills/literature-triage-matrix",
+        "skills/paper-memory-builder"
+      ],
+      "license": "MIT"
+    }
+  },
+  "python": {
+    "PyMuPDF": "1.28.2",
+    "pytest": "9.1.1 (development/test only)"
+  },
+  "web_components": {
+    "katex": {
+      "version": "0.18.1",
+      "license": "MIT",
+      "purpose": "offline LaTeX-to-MathML rendering in single-paper review HTML"
+    }
+  }
+}

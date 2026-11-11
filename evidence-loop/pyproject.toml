@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evidence-loop"
+version = "0.1.0"
+description = "Human judgment and AI-assisted reading through one portable evidence workflow"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+readme = "README.md"
+dependencies = []
+
+[project.optional-dependencies]
+pdf = ["PyMuPDF>=1.28,<2"]
+dev = ["pytest>=8", "build>=1.2"]
+
+[project.scripts]
+evidence-loop = "evidence_loop.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+evidence_loop = ["templates/*.html", "vendor/katex/*", "schemas/*.json", "prompts/*.md", "skills/*/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

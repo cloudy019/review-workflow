@@ -1,0 +1,67 @@
+# 白名单仓库：项目根默认忽略全部，只放行评审流程代码、测试与文档。
+# 新增文件必须显式 git add，或在本文件中逐级放行；禁止 git add -A。
+# 课题资料（AGENTS.md、文献知识库/、artifacts/md_xai_search/）一律不入库。
+/*
+!/.gitignore
+!/README.md
+!/CHANGELOG.md
+!/启动人工评审.cmd
+!/一键更新评审.cmd
+!/evidence-loop/
+!/review_workflow/
+!/tests/
+!/artifacts/
+!/.workbuddy/
+
+# ---- .workbuddy：只放行评审服务启动脚本 ----
+/.workbuddy/*
+!/.workbuddy/serve_reviews.sh
+
+# ---- artifacts：只放行两个评审工具目录 ----
+/artifacts/*
+!/artifacts/review_ui/
+!/artifacts/figure_repair/
+
+/artifacts/review_ui/*
+!/artifacts/review_ui/*.py
+!/artifacts/review_ui/*.js
+!/artifacts/review_ui/*.md
+!/artifacts/review_ui/package.json
+
+/artifacts/figure_repair/*
+!/artifacts/figure_repair/*.py
+!/artifacts/figure_repair/*.md
+
+# ---- 保持排除：辅助文件与内部报告（2026-11-10 用户明确要求） ----
+/evidence-loop/.gitignore
+/evidence-loop/LICENSE
+/evidence-loop/MANIFEST.in
+/evidence-loop/src/evidence_loop/vendor/katex/LICENSE
+/review_workflow/vendor/katex/pnpm-lock.yaml
+/review_workflow/windows_launcher/
+/review_workflow/IMPLEMENTATION_REPORT.md
+
+# ---- 全局排除：缓存、依赖、生成物、凭据 ----
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+node_modules/
+.edge-p2/
+*.log
+*.pdf
+*.docx
+*.pptx
+*.xlsx
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.7z
+*.pem
+*.key
+*.env
+.zotero_key
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm

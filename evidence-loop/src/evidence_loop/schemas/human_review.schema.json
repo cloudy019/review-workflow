@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/review_workflow/human_review.schema.json",
+  "title": "Single-paper human review",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "paper_id",
+    "zotero_key",
+    "pdf_sha256",
+    "ai_note_sha256",
+    "review_outcome",
+    "sections",
+    "citation_permission",
+    "exported_at"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "job_id": { "type": "string", "pattern": "^paper-[0-9a-f]{16}$" },
+    "paper_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\s;,|]+$"
+    },
+    "zotero_key": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[^\\s;,|]+$"
+    },
+    "pdf_sha256": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "ai_note_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "ai_review_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "review_outcome": {
+      "enum": [
+        "human_confirmed",
+        "excluded",
+        "needs_clarification",
+        "blocked_source"
+      ]
+    },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["section_id", "verdict", "notes"],
+        "properties": {
+          "section_id": { "type": "integer", "minimum": 1, "maximum": 8 },
+          "verdict": {
+            "enum": [
+              "correct",
+              "partially_correct",
+              "incorrect",
+              "unable_to_judge",
+              "skipped"
+            ]
+          },
+          "notes": { "type": "string" },
+          "answers": { "type": "object" }
+        }
+      }
+    },
+    "citation_permission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed", "approved_claims"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "approved_claims": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "notes": { "type": "string" }
+      }
+    },
+    "exported_at": { "type": "string", "format": "date-time" }
+  }
+}
