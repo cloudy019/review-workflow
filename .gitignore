@@ -4,7 +4,7 @@
 /*
 !/.gitignore
 !/README.md
-!/CHANGELOG.md
+!/docs/
 !/启动人工评审.cmd
 !/一键更新评审.cmd
 !/evidence-loop/
@@ -16,6 +16,10 @@
 # ---- .workbuddy：只放行评审服务启动脚本 ----
 /.workbuddy/*
 !/.workbuddy/serve_reviews.sh
+
+# ---- docs：只放行 Markdown 精简上下文 ----
+/docs/*
+!/docs/*.md
 
 # ---- artifacts：只放行两个评审工具目录 ----
 /artifacts/*

@@ -109,7 +109,7 @@ def request_queue_refresh(kb: str | Path) -> tuple[Path, dict[str, Any]]:
         "library_json": str((root / "review-app" / "library.json").resolve()),
         "reading_ledger": str((root / "review-app" / "论文文件总索引.md").resolve()),
         "instructions": str(
-            (root.parent / "review_workflow" / "WORKBUDDY_QUEUE.md").resolve()
+            (root.parent / "docs" / "CONTRACTS.md").resolve()
         ),
         "source_pool": str(
             (
@@ -194,7 +194,7 @@ def _launch_workbuddy(kb: str | Path, request_path: str | Path) -> dict[str, Any
 
     prompt = (
         "这是论文评审队列维护任务。先读取且严格遵守 "
-        f"{root.parent / 'AGENTS.md'}、{root.parent / 'review_workflow' / 'WORKBUDDY_QUEUE.md'} "
+        f"{root.parent / 'docs' / 'CONTRACTS.md'} "
         f"和请求文件 {request_file}。单篇AI阅读使用本项目 "
         f"{root.parent / '.workbuddy' / 'skills' / 'evidence-loop' / 'SKILL.md'}，"
         "运行同一个Evidence Loop框架，不依赖Codex子代理，也不得另建状态机。"

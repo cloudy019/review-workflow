@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """从单篇论文 PDF 中定位并裁剪图/表区域，输出 PNG 与可追溯清单 JSON。
 
-约束（遵循项目 AGENTS.md / WORKBUDDY_QUEUE.md）：
+约束（遵循 docs/CONTRACTS.md）：
 - 源 PDF 只读；不复制 PDF 进项目目录。
 - 输出 PNG 全部来自原始 PDF 页面的真实渲染，不做任何重绘、推断或"美化"。
 - 定位失败时写明确的 missing_reason，绝不生成占位图或 AI 生成图。

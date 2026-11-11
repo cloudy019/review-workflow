@@ -8,8 +8,9 @@ Evidence Loop 将单篇阅读、八节人工评审和可追溯知识输出放入
 
 ## 使用
 
+源码已随本仓收录在 `evidence-loop/`，不是 git submodule，无需单独 clone：
+
 ```bash
-git clone https://github.com/cloudy019/evidence-loop.git
 cd evidence-loop
 python -m pip install ".[pdf]"
 python -m evidence_loop --workspace ./workspace init
@@ -84,6 +85,6 @@ python scripts/audit_release.py
 
 测试使用运行时生成的模拟 PDF、本地 HTTP 模拟 API 和模拟人工输入；不读取私人文库，不产生模型账单。覆盖跨宿主协议、交接、并发抢占、人工保存、哈希失效、迁移、批次门控与 API 全文分块。真实 DeepSeek 调用需自行配置账户密钥，发布验证不冒充真实模型测试。
 
-MIT 授权适用于框架自有代码；第三方依赖见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。运行数据、论文、密钥与宿主个人配置均排除在发行包外，发布范围见 [docs/release-audit.md](docs/release-audit.md)。
+MIT 授权适用于框架自有代码；第三方依赖见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。运行数据、论文、密钥与宿主个人配置均排除在发行包外，发布范围见[仓库白名单](../docs/CONTRACTS.md#9-仓库白名单)。
 
 English: Evidence Loop is a host-neutral human judgment / AI-assisted reading framework. One PDF per job, one state store, replaceable native-agent and OpenAI-compatible readers, offline eight-section review pages, explicit human citation permission and source-bound provenance. See [the protocol](docs/protocol.md) for integration.
